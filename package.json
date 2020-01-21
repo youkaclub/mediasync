@@ -1,0 +1,9 @@
+{
+  "name": "mediasync",
+  "version": "1.0.0",
+  "description": "sync html media elements",
+  "repository": "https://github.com/youkaclub/mediasync",
+  "main": "index.js",
+  "author": "youka",
+  "license": "MIT"
+}
