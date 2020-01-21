@@ -1,4 +1,4 @@
-# mediaelements
+# mediasync
 sync html media elements (video/audio).
 
 ## usage
