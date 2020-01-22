@@ -1,3 +1,6 @@
+const TimingObject = require('./timingobject').TimingObject
+const mediaSync = require('./mediascape').mediaSync
+
 class MediaSync {
   constructor (options) {
     options = options || {}
@@ -6,7 +9,7 @@ class MediaSync {
     this.medias = []
     this.syncs = []
 
-    this.to = new TIMINGSRC.TimingObject({
+    this.to = new TimingObject({
       range: [0.0, options.duration],
       position: 0.0
     })
@@ -41,7 +44,7 @@ class MediaSync {
     media.addEventListener('seeking', this.seekingFn)
     media.addEventListener('volumechange', this.volumechangeFn)
     media.addEventListener('timeupdate', this.timeupdateFn)
-    const sync = MCorp.mediaSync(media, this.to)
+    const sync = mediaSync(media, this.to)
     if (this.isSafari) {
       sync.setOption('target', 0.5)
     }
@@ -63,14 +66,18 @@ class MediaSync {
     }
   }
 
-  seeking (e) {
+  seek (t) {
     this.removeEventListener('seeking', this.seekingFn)
 
-    this.to.update({ position: e.target.currentTime })
+    this.to.update({ position: t })
 
     setTimeout(() => {
       this.addEventListener('seeking', this.seekingFn)
     }, 200)
+  }
+
+  seeking (e) {
+    this.seek(e.target.currentTime)
   }
 
   timeupdate (e) {
@@ -102,7 +109,7 @@ class MediaSync {
     this.medias.map(m => { m.removeEventListener(type, listener) })
   }
 
-  play (e) {
+  play () {
     this.removeEventListener('play', this.playFn)
     this.removeEventListener('pause', this.pauseyFn)
 
@@ -126,4 +133,8 @@ class MediaSync {
       this.addEventListener('pause', this.pauseFn)
     }, 200)
   }
+}
+
+module.exports = {
+  MediaSync
 }

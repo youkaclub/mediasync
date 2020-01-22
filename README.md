@@ -3,23 +3,17 @@ sync html media elements (video/audio).
 
 ## usage
 ```js
-const audio1 = new Audio('src1')
-const audio2 = new Audio('src2')
-const video1 = document.querySelector('#video1')
-const video2 = document.querySelector('#video2')
+const MediaSync = require('mediasync')
 const ms = new MediaSync()
-ms.add(audio1)
-ms.add(audio2)
-ms.add(video1)
-ms.add(video2)
+const audio = document.querySelector('#audio')
+const video = document.querySelector('#video')
+ms.add(audio)
+ms.add(video)
 ms.play()
+ms.seek(42.2)
 ms.pause()
-ms.remove(video1)
+ms.remove(video)
 ```
-
-## todo
-- build for node/browser
-- docs
 
 ## license
 MIT
