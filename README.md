@@ -3,7 +3,7 @@ sync html media elements (video/audio).
 
 ## usage
 ```js
-const MediaSync = require('mediasync')
+const MediaSync = require('mediasync').MediaSync
 const ms = new MediaSync()
 const audio = document.querySelector('#audio')
 const video = document.querySelector('#video')
