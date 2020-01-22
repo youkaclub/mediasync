@@ -1,77 +1,72 @@
 class MediaSync {
   constructor (options) {
     options = options || {}
+    options.duration = options.duration || 100
+
     this.medias = []
-    // depends on browser? (safari: 0.1, chrome: 0.05)
-    this.maxDiff = options.maxDiff || 0.1
+    this.syncs = []
+
+    this.to = new TIMINGSRC.TimingObject({
+      range: [0.0, options.duration],
+      position: 0.0
+    })
 
     this.playFn = this.play.bind(this)
     this.pauseFn = this.pause.bind(this)
-    this.seekedFn = this.seeked.bind(this)
+    this.seekingFn = this.seeking.bind(this)
     this.volumechangeFn = this.volumechange.bind(this)
-    this.enableAudioFn = this.enableAudio.bind(this)
-
-    this.syncInterval = setInterval(() => this.sync(), 1000)
-
-    if (options.medias) {
-      options.medias.map(media => this.add(media))
-    }
-
-    if (window.navigator.userAgent.match(/(iPad|iPhone)/i)) {
-      document.addEventListener('touchstart', this.enableAudioFn)
-    }
-  }
-
-  enableAudio () {
-    document.removeEventListener('touchstart', this.enableAudioFn)
-    this.muted = true
-    this.play()
-    this.pause()
-    this.muted = false
+    this.timeupdateFn = this.timeupdate.bind(this)
   }
 
   add (media) {
-    media.load()
     media.addEventListener('play', this.playFn)
     media.addEventListener('pause', this.pauseFn)
-    media.addEventListener('seeked', this.seekedFn)
+    media.addEventListener('seeking', this.seekingFn)
     media.addEventListener('volumechange', this.volumechangeFn)
+    media.addEventListener('timeupdate', this.timeupdateFn)
+    const sync = MCorp.mediaSync(media, this.to)
+    this.syncs.push(sync)
     this.medias.push(media)
-
-    if (!this.medias[0].paused) {
-      media.currentTime = this.medias[0].currentTime
-      media.play()
-    }
   }
 
   remove (media) {
     media.removeEventListener('play', this.playFn)
     media.removeEventListener('pause', this.pauseFn)
-    media.removeEventListener('seeked', this.seekedFn)
+    media.removeEventListener('seeking', this.seekingFn)
     media.removeEventListener('volumechange', this.volumechangeFn)
-    this.medias = this.medias.filter(m => m !== media)
+    const index = this.medias.findIndex(m => m === media)
+    if (index > -1) {
+      const sync = this.syncs[index]
+      sync.stop()
+      this.medias.splice(index, 1)
+      this.syncs.splice(index, 1)
+    }
   }
 
-  seeked (e) {
-    this.medias.map(m => m.removeEventListener('seeked', this.seekedFn))
-    this.medias.map(m => {
-      if (m === e.target) return
-      m.currentTime = e.target.currentTime
-    })
+  seeking (e) {
+    this.removeEventListener('seeking', this.seekingFn)
+
+    this.to.update({ position: e.target.currentTime })
+
     setTimeout(() => {
-      this.medias.map(m => m.addEventListener('seeked', this.seekedFn))
+      this.addEventListener('seeking', this.seekingFn)
     }, 200)
   }
 
+  timeupdate (e) {
+    if (!e.target.seeking) return
+    this.seeking(e)
+  }
+
   volumechange (e) {
-    this.medias.map(m => m.removeEventListener('volumechange', this.volumechangeFn))
+    this.removeEventListener('volumechange', this.volumechangeFn)
     this.medias.map(m => {
       if (m === e.target) return
       m.muted = e.target.muted
       m.volume = e.target.volume
     })
     setTimeout(() => {
-      this.medias.map(m => m.addEventListener('volumechange', this.volumechangeFn))
+      this.addEventListener('volumechange', this.volumechangeFn)
     }, 200)
   }
 
@@ -79,33 +74,36 @@ class MediaSync {
     this.medias.map(media => { media.muted = val })
   }
 
+  addEventListener (type, listener) {
+    this.medias.map(m => { m.addEventListener(type, listener) })
+  }
+
+  removeEventListener (type, listener) {
+    this.medias.map(m => { m.removeEventListener(type, listener) })
+  }
+
   play (e) {
-    return Promise.all(this.medias.map(media => media.play()))
+    this.removeEventListener('play', this.playFn)
+    this.removeEventListener('pause', this.pauseyFn)
+
+    this.to.update({ velocity: 1 })
+
+    setTimeout(() => {
+      this.addEventListener('play', this.playFn)
+      this.addEventListener('pause', this.pauseFn)
+    }, 200)
   }
 
-  pause () {
-    this.medias.map(media => media.pause())
-  }
+  pause (e) {
+    if (e && e.target.seeking) return
+    this.removeEventListener('play', this.playFn)
+    this.removeEventListener('pause', this.pauseFn)
 
-  sync () {
-    if (this.lastSync) {
-      const secSinceLastSync = ((Date.now() - this.lastSync) / 1000)
-      if (secSinceLastSync < 5) {
-        return
-      }
-    }
+    this.to.update({ velocity: 0 })
 
-    const currentTimeMin = Math.min.apply(Math, this.medias.map(a => a.currentTime))
-    const currentTimeMax = Math.max.apply(Math, this.medias.map(a => a.currentTime))
-    const currentTimeDiff = currentTimeMax - currentTimeMin
-    if (currentTimeDiff > this.maxDiff && currentTimeDiff < 1) {
-      console.log('diff', currentTimeDiff)
-      this.lastSync = Date.now()
-      this.pause()
-      this.medias.map(m => { m.currentTime = this.medias[0].currentTime })
-      setTimeout(() => {
-        this.play()
-      }, 200)
-    }
+    setTimeout(() => {
+      this.addEventListener('play', this.playFn)
+      this.addEventListener('pause', this.pauseFn)
+    }, 200)
   }
 }

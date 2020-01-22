@@ -5,5 +5,8 @@
   "repository": "https://github.com/youkaclub/mediasync",
   "main": "index.js",
   "author": "youka",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "window": "^4.2.6"
+  }
 }

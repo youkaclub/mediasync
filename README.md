@@ -19,6 +19,7 @@ ms.remove(video1)
 
 ## todo
 - mobile support
+- build for node/browser
 - docs
 
 ## license
