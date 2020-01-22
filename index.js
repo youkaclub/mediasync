@@ -16,6 +16,23 @@ class MediaSync {
     this.seekingFn = this.seeking.bind(this)
     this.volumechangeFn = this.volumechange.bind(this)
     this.timeupdateFn = this.timeupdate.bind(this)
+    this.enableAudioFn = this.enableAudio.bind(this)
+
+    if (this.isSafari()) {
+      document.addEventListener('touchstart', this.enableAudioFn)
+    }
+  }
+
+  isSafari () {
+    return window.navigator.userAgent.match(/(iPad|iPhone|iPod|Safari)/i)
+  }
+
+  enableAudio () {
+    document.removeEventListener('touchstart', this.enableAudioFn)
+    this.muted = true
+    this.medias.map(m => { m.play() })
+    this.medias.map(m => { m.pause() })
+    this.muted = false
   }
 
   add (media) {
@@ -24,7 +41,13 @@ class MediaSync {
     media.addEventListener('seeking', this.seekingFn)
     media.addEventListener('volumechange', this.volumechangeFn)
     media.addEventListener('timeupdate', this.timeupdateFn)
-    const sync = MCorp.mediaSync(media, this.to)
+    const options = {
+      debug: true
+    }
+    const sync = MCorp.mediaSync(media, this.to, options)
+    if (this.isSafari) {
+      sync.setOption('target', 0.5)
+    }
     this.syncs.push(sync)
     this.medias.push(media)
   }
