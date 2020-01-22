@@ -41,10 +41,7 @@ class MediaSync {
     media.addEventListener('seeking', this.seekingFn)
     media.addEventListener('volumechange', this.volumechangeFn)
     media.addEventListener('timeupdate', this.timeupdateFn)
-    const options = {
-      debug: true
-    }
-    const sync = MCorp.mediaSync(media, this.to, options)
+    const sync = MCorp.mediaSync(media, this.to)
     if (this.isSafari) {
       sync.setOption('target', 0.5)
     }
