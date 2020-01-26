@@ -33,7 +33,7 @@ class MediaSync {
     media.addEventListener('timeupdate', this.timeupdateFn)
     const sync = mediaSync(media, this.to)
     if (this.isSafari()) {
-      sync.setOption('target', 0.5)
+      sync.setOption('target', 0.8)
     }
     this.syncs.push(sync)
     this.medias.push(media)
